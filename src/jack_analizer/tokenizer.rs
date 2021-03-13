@@ -65,30 +65,8 @@ impl Tokenizer{
         coso.update_content();
         Ok(coso)
     }
-    pub fn print(&self){
-        println!("{:?}",self.tokens);
-    }
-    pub fn advance(&mut self){
-        self.current_token += 1;
-        self.update_content();
-    }
     pub fn current_token(&self)->&TokenType{
         &self.tokens[self.current_token]
-    }
-    pub fn more_tokens_left(&self)->bool{
-        self.tokens.len() > self.current_token
-    }
-    pub fn to_xml(&self,file: &str)->Result<(),CompilationError>{
-        let mut acum = String::from("<tokens>\n");
-        for token in &self.tokens{
-            acum.push_str(&token.to_xml());
-            acum.push('\n');
-        }
-        acum.push_str("</tokens>\n");
-        match fs::write(file, acum){
-            Ok(_)=>return Ok(()),
-            Err(_)=>return Err(CompilationError::FileAccessingError(file.to_string())),
-        }
     }
     pub fn ret_and_advance(&mut self)->&TokenType{
         self.current_token += 1;
@@ -107,9 +85,6 @@ impl Tokenizer{
     }
     pub fn content(&self)->&String{
         &self.content
-    }
-    pub fn tipo(&self)->Type{
-        self.tipo
     }
 }
 #[derive(PartialEq,Debug)]
@@ -132,7 +107,16 @@ impl TokenType{
     pub fn tokenize(file:&str)->Result<Vec<Self>,CompilationError>{
         if let Ok(valor) = fs::read_to_string(file) {
             let mut tokens = Vec::new();
+            let mut flag = false;
             for line in valor.lines(){
+                if flag{
+                    flag = TokenType::is_not_closing_multiline_comment(line);
+                    continue;
+                }
+                if TokenType::is_opening_multiline_comment(line){
+                    flag = true;
+                    continue;
+                }
                 if let Some(mut value) = Self::parse_token(line) {
                     tokens.append(&mut value);
                 }
@@ -221,6 +205,14 @@ impl TokenType{
                 }
             }
         }
+    }
+    fn is_opening_multiline_comment(line:&str)->bool{
+        let line = line.trim();
+        line.starts_with("/*") && !line.ends_with("*/")
+    }
+    fn is_not_closing_multiline_comment(line:&str)->bool{
+        let line = line.trim();
+        !line.ends_with("*/")
     }
     pub fn to_xml(&self)->String{
         match self{

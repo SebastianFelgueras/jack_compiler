@@ -96,9 +96,43 @@ impl CompilationEngine{
         Ok(())
     }
     fn compile_expression(&mut self)->Resul{
-        self.push_str("<expression>\n<term>\n");
-        self.advance_and_compile(); //Deberia funcionar para expression less
-        self.push_str("</term>\n</expression>\n");
+        self.push_str("<expression>\n");
+        self.compile_term()?;
+        while OP.contains(&self.tokens.content().as_str()){
+            self.advance_and_compile(); //compila la operacion
+            self.compile_term()?;
+        }
+        self.push_str("</expression>\n");
+        Ok(())
+    }
+    fn compile_term(&mut self)->Resul{
+        self.push_str("<term>\n");
+        if UNARY_OP.contains(&self.tokens.content().as_str()){
+            self.advance_and_compile();self.compile_term()?; //unaryOp term
+            self.push_str("</term>\n");
+            return Ok(());
+        }else if self.tokens.content() == "("{
+            self.advance_and_compile();//(
+            self.compile_expression()?;
+            self.advance_and_compile();//)
+            self.push_str("</term>\n");
+            return Ok(())
+        }
+        self.advance_and_compile();
+        if self.tokens.content() == "["{
+            self.advance_and_compile(); //[
+            self.compile_expression()?;
+            self.advance_and_compile();//]
+        }else if self.tokens.content() == "."{
+            self.advance_and_compile();self.advance_and_compile();self.advance_and_compile(); //.subroutineName(
+            self.compile_expression_list()?;
+            self.advance_and_compile();//)
+        }else if self.tokens.content() == "("{
+            self.advance_and_compile();//(
+            self.compile_expression_list()?;
+            self.advance_and_compile();//)
+        }
+        self.push_str("</term>\n");
         Ok(())
     }
     fn compile_let(&mut self)->Resul{
@@ -181,7 +215,7 @@ impl CompilationEngine{
         if self.tokens.content() !=")"{
             self.compile_expression()?;
         }
-        while self.tokens.content() !=")"{
+        while self.tokens.content() ==","{
             self.advance_and_compile();//,
             self.compile_expression()?;
         }

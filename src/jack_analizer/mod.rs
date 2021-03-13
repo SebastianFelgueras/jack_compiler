@@ -12,4 +12,5 @@ use crate::CompilationError;
 }*/
 pub fn compile(file: &str)->Result<String,CompilationError>{
     compilation_engine::compile(tokenizer::Tokenizer::new(file)?)
+    //Ok(tokenizer::Tokenizer::new(file)?.to_xml()?)
 }
