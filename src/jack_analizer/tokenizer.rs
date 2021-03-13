@@ -6,6 +6,8 @@ use crate::CompilationError;
 pub struct Tokenizer{
     tokens: Vec<TokenType>,
     current_token: usize,
+    content: String,
+    tipo: Type,
 }
 const SIMBOLS: [char;20] = [
     '{',
@@ -54,19 +56,27 @@ const KEYWORDS: [&str;21] = [
 ];
 impl Tokenizer{
     pub fn new(file: &str)->Result<Self,CompilationError>{
-        Ok(Tokenizer{
+        let mut coso = Tokenizer{
+            content:String::new(),
             tokens: TokenType::tokenize(file)?,
             current_token: 0,
-        })
+            tipo: Type::Identifier,
+        };
+        coso.update_content();
+        Ok(coso)
+    }
+    pub fn print(&self){
+        println!("{:?}",self.tokens);
     }
     pub fn advance(&mut self){
         self.current_token += 1;
+        self.update_content();
     }
     pub fn current_token(&self)->&TokenType{
         &self.tokens[self.current_token]
     }
     pub fn more_tokens_left(&self)->bool{
-        self.tokens.len() >= self.current_token
+        self.tokens.len() > self.current_token
     }
     pub fn to_xml(&self,file: &str)->Result<(),CompilationError>{
         let mut acum = String::from("<tokens>\n");
@@ -80,13 +90,43 @@ impl Tokenizer{
             Err(_)=>return Err(CompilationError::FileAccessingError(file.to_string())),
         }
     }
+    pub fn ret_and_advance(&mut self)->&TokenType{
+        self.current_token += 1;
+        self.update_content();
+        &self.tokens[self.current_token - 1]
+    }
+    fn update_content(&mut self){
+        self.content = self.current_token().inner();
+        self.tipo = match self.current_token(){
+            TokenType::Identifier(_)=>Type::Identifier,
+            TokenType::IntConst(_)=>Type::IntConst,
+            TokenType::StringConst(_)=>Type::StringConst,
+            TokenType::Symbol(_)=>Type::Symbol,
+            TokenType::KeyWord(_)=>Type::Keyword,
+        };
+    }
+    pub fn content(&self)->&String{
+        &self.content
+    }
+    pub fn tipo(&self)->Type{
+        self.tipo
+    }
 }
-enum TokenType{
+#[derive(PartialEq,Debug)]
+pub enum TokenType{
     KeyWord(String),
-    Symbol(char),
+    Symbol(String),
     Identifier(String),
     IntConst(String),
     StringConst(String),
+}
+#[derive(PartialEq,Clone,Copy)]
+pub enum Type{
+    Keyword,
+    Symbol,
+    Identifier,
+    IntConst,
+    StringConst,
 }
 impl TokenType{
     pub fn tokenize(file:&str)->Result<Vec<Self>,CompilationError>{
@@ -100,6 +140,15 @@ impl TokenType{
             Ok(tokens)
         }else{
             Err(CompilationError::FileAccessingError(file.to_string()))
+        }
+    }
+    fn inner(&self)->String{
+        match self{
+            TokenType::Symbol(coso)=>format!("{}",coso),
+            TokenType::StringConst(coso)=>coso.to_string(),
+            TokenType::KeyWord(coso)=>coso.to_string(),
+            TokenType::IntConst(coso)=>coso.to_string(),
+            TokenType::Identifier(coso)=>coso.to_string(),
         }
     }
     fn drain_accumulator(tokens: &mut Vec<TokenType>,acumulador:&mut String){
@@ -133,6 +182,12 @@ impl TokenType{
                     continue;
                 }
                 if SIMBOLS.contains(&caracter){
+                    let caracter = match caracter{
+                        '<'=>"&lt;".to_string(),
+                        '>'=>"&gt;".to_string(),
+                        '&'=>"&amp;".to_string(),
+                        c=>format!("{}",c),
+                    };
                     Self::drain_accumulator(&mut tokens,&mut acumulador);
                     tokens.push(TokenType::Symbol(caracter));
                 }else if caracter.is_whitespace(){
@@ -177,6 +232,6 @@ impl TokenType{
         }
     }
     fn plantilla_xml<T: Display>(tipo:&str,valor:T)->String{
-        format!("<{}>{}</{}>",tipo,valor,tipo)
+        format!("<{}>{}</{}>\n",tipo,valor,tipo)
     }
 }

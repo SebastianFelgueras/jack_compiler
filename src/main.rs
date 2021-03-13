@@ -4,6 +4,8 @@ use std::{
     path::PathBuf,
     fs,
 };
+//NO HACE NINGUN CHEQUEO SOBRE EL CODIGO, PUEDE QUE COMPILE COSAS SIN SENTIDO
+const COMPEXT:&str = "xmlC"; //la C es para evitar que sobreescriba los archivos de testeo
 //el tokenizer no lo testee al 100% pero deberia estar bien
 mod jack_analizer;
 fn main() {
@@ -14,12 +16,12 @@ fn main() {
     }
     let path = PathBuf::from(&argumento[0]);
     if path.is_file(){
-        jack_analizer::tokenize(&argumento[0]).unwrap();
+        fs::write(path.with_extension(COMPEXT), jack_analizer::compile(&argumento[0]).unwrap()).unwrap();
     }else{
         for file in fs::read_dir(path).unwrap(){
             let file = file.unwrap().path();
             if file.is_file() && file.extension() == Some(std::ffi::OsStr::new("jack")){
-                jack_analizer::tokenize(file.to_str().unwrap()).unwrap();
+                fs::write(file.with_extension(COMPEXT), jack_analizer::compile(file.to_str().unwrap()).unwrap()).unwrap();
             }
         }
     }
@@ -27,4 +29,5 @@ fn main() {
 #[derive(Debug)]
 pub enum CompilationError{
     FileAccessingError(String),
+    SintaxError,
 }
