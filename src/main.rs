@@ -1,3 +1,5 @@
+///Subrutines: fileName.SubRutineName
+/// null =0; true = -1; false = 0;
 use std::{
     env,
     process::exit,
@@ -5,8 +7,7 @@ use std::{
     fs,
 };
 //NO HACE NINGUN CHEQUEO SOBRE EL CODIGO, PUEDE QUE COMPILE COSAS SIN SENTIDO
-const COMPEXT:&str = "xmlC"; //la C es para evitar que sobreescriba los archivos de testeo
-//el tokenizer no lo testee al 100% pero deberia estar bien
+const COMPEXT:&str = "vm"; //la C es para evitar que sobreescriba los archivos de testeo
 mod jack_analizer;
 fn main() {
     let argumento = env::args().skip(1).collect::<Vec<String>>();

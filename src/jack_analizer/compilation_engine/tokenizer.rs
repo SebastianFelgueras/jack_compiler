@@ -73,6 +73,10 @@ impl Tokenizer{
         self.update_content();
         &self.tokens[self.current_token - 1]
     }
+    pub fn advance(&mut self){
+        self.current_token += 1;
+        self.update_content();
+    }
     fn update_content(&mut self){
         self.content = self.current_token().inner();
         self.tipo = match self.current_token(){
@@ -85,6 +89,9 @@ impl Tokenizer{
     }
     pub fn content(&self)->&String{
         &self.content
+    }
+    pub fn tipo(&self)->Type{
+        self.tipo
     }
 }
 #[derive(PartialEq,Debug)]

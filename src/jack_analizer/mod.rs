@@ -1,4 +1,3 @@
-mod tokenizer;
 mod compilation_engine;
 use crate::CompilationError;
 //use std::path::PathBuf;
@@ -11,6 +10,6 @@ use crate::CompilationError;
     tokenizer::Tokenizer::new(file)?.to_xml(path.to_str().unwrap())
 }*/
 pub fn compile(file: &str)->Result<String,CompilationError>{
-    compilation_engine::compile(tokenizer::Tokenizer::new(file)?)
+    compilation_engine::compile(file)
     //Ok(tokenizer::Tokenizer::new(file)?.to_xml()?)
 }
