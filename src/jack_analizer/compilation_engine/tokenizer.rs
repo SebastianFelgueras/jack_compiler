@@ -1,6 +1,5 @@
 use std::{
     fs,
-    fmt::Display,
 };
 use crate::CompilationError;
 pub struct Tokenizer{
@@ -67,11 +66,6 @@ impl Tokenizer{
     }
     pub fn current_token(&self)->&TokenType{
         &self.tokens[self.current_token]
-    }
-    pub fn ret_and_advance(&mut self)->&TokenType{
-        self.current_token += 1;
-        self.update_content();
-        &self.tokens[self.current_token - 1]
     }
     pub fn advance(&mut self){
         self.current_token += 1;
@@ -220,17 +214,5 @@ impl TokenType{
     fn is_not_closing_multiline_comment(line:&str)->bool{
         let line = line.trim();
         !line.ends_with("*/")
-    }
-    pub fn to_xml(&self)->String{
-        match self{
-            TokenType::Symbol(coso)=>Self::plantilla_xml("symbol",coso),
-            TokenType::StringConst(coso)=>Self::plantilla_xml("stringConstant",coso),
-            TokenType::KeyWord(coso)=>Self::plantilla_xml("keyword",coso),
-            TokenType::IntConst(coso)=>Self::plantilla_xml("integerConstant",coso),
-            TokenType::Identifier(coso)=>Self::plantilla_xml("identifier",coso),
-        }
-    }
-    fn plantilla_xml<T: Display>(tipo:&str,valor:T)->String{
-        format!("<{}>{}</{}>\n",tipo,valor,tipo)
     }
 }
