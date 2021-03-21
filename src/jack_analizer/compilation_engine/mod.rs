@@ -68,6 +68,8 @@ impl CompilationEngine{
             if self.tokens.content() != ","{
                 let nombre = self.content_and_advance().clone();
                 self.tables.insert(tipo.clone(),kind,nombre);
+            }else{
+                self.advance();
             }
         }
         self.advance(); //agrega el ;
@@ -267,8 +269,10 @@ impl CompilationEngine{
     }
     fn compile_while(&mut self)->Resul{
         let label = self.generate_unique_label();
+        let wile = self.generate_unique_label();
         self.advance(); //while
         self.advance();//(
+        self.compiled.label(&wile);
         self.compile_expression()?;
         self.compiled.arithmetic("not");
         self.compiled.write_if(&label);
@@ -276,6 +280,7 @@ impl CompilationEngine{
         self.advance();//{
         self.compile_statements()?;
         self.advance();//}
+        self.compiled.goto(&wile);
         self.compiled.label(&label);
         Ok(())
     }
